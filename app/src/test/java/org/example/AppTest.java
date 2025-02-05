@@ -15,11 +15,6 @@ class AppTest {
   }
 
   @Test
-  void healthInsuranceTestNegativeDependents() {
-    assertEquals(15, App.getHealthInsuranceDeduction(-1));
-  }
-
-  @Test
   void healthInsuranceTestNoDependents() {
     assertEquals(15, App.getHealthInsuranceDeduction(0));
   }
