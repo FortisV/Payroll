@@ -36,6 +36,14 @@ public class App {
     }
   }
 
+  public static int getChildren(String prompt, String error) {
+    int children = Input.getInteger(prompt, error);
+    if(children < 0) {
+      return 0;
+    }
+    return children;
+  }
+
   public static double getGrossPay(double hours, double rate) {
     if(hours <= overtimeLimit) {
       return hours * rate;
@@ -45,9 +53,7 @@ public class App {
   }
 
   public static double getHealthInsuranceDeduction(int children) {
-    if(children < 0) {
-      children = 0;
-    }
+
     if(children < healthInsuranceDependentLimit) {
       return healthInsuranceLessDependents;
     } else {
@@ -93,7 +99,7 @@ public class App {
 
     String childrenPrompt = "How many children do you have: ";
     String childrenError  = "Please enter a valid number of children";
-    int children = Input.getInteger(childrenPrompt, childrenError);
+    int children = getChildren(childrenPrompt, childrenError);
     System.out.println();
     double healthInsuranceDeduction = getHealthInsuranceDeduction(children);
 
