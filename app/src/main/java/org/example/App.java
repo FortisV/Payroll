@@ -1,5 +1,6 @@
 package org.example;
 
+import javax.xml.stream.events.StartDocument;
 import java.text.DecimalFormat;
 
 public class App {
@@ -24,89 +25,92 @@ public class App {
 
   static double localUnionDeduction = 10.00;
 
+  public static int getLifeInsuranceSelection(int children, String prompt, String error, String errorDependent) {
+    while(true) {
+      int lifeInsuranceSelection = Input.getInteger(1, 4, prompt, error);
+      if(lifeInsuranceSelection != 4 || children != 0) {
+        return lifeInsuranceSelection;
+      } else {
+        System.out.println(errorDependent + '\n');
+      }
+    }
+  }
+
+  public static double getGrossPay(double hours, double rate) {
+    if(hours <= overtimeLimit) {
+      return hours * rate;
+    } else {
+      return rate * (overtimeLimit + (hours - overtimeLimit) * overtimeMultiplier);
+    }
+  }
+
+  public static double getHealthInsuranceDeduction(int children) {
+    if(children < 0) {
+      children = 0;
+    }
+    if(children < healthInsuranceDependentLimit) {
+      return healthInsuranceLessDependents;
+    } else {
+      return healthInsuranceMoreDependents;
+    }
+  }
+
+  public static double getLifeInsurancePlanDeduction(int lifeInsuranceSelection) {
+    if(lifeInsuranceSelection == 1) {
+      return noLifeInsurancePlanDeduction;
+    } else if(lifeInsuranceSelection == 2) {
+      return singleLifeInsurancePlanDeduction;
+    } else if(lifeInsuranceSelection == 3) {
+      return marriedLifeInsurancePlanDeduction;
+    } else if(lifeInsuranceSelection == 4) {
+      return marriedKidsLifeInsurancePlanDeduction;
+    }
+    return -1;
+  }
+
+  public static double getNetTax(double socialSecurityDeduction, double federalIncomeDeduction, double stateIncomeDeduction) {
+    return socialSecurityDeduction + federalIncomeDeduction + stateIncomeDeduction;
+  }
+
+  public static double getNetFee(double localUnionDeduction, double healthInsuranceDeduction, double lifeInsuranceDeduction) {
+    return localUnionDeduction + healthInsuranceDeduction + lifeInsuranceDeduction;
+  }
+
   public static void main(String[] args) {
     System.out.println("Welcome to Payroll Application\n");
 
 
     String hourPrompt = "How many hours did you work this week: ";
-    String hourError  = "Please a valid number of hours";
+    String hourError  = "Please enter a valid number of hours";
     double hours = Input.getDoubleMin(0, hourPrompt, hourError);
     System.out.println();
 
-
     String ratePrompt = "What is your hourly rate: ";
-    String rateError  = "Please a valid hourly rate";
+    String rateError  = "Please enter a valid hourly rate";
     double rate = Input.getDoubleMin(0, ratePrompt, rateError);
     System.out.println();
-
+    double grossPay = getGrossPay(hours, rate);
 
     String childrenPrompt = "How many children do you have: ";
     String childrenError  = "Please enter a valid number of children";
     int children = Input.getInteger(childrenPrompt, childrenError);
     System.out.println();
+    double healthInsuranceDeduction = getHealthInsuranceDeduction(children);
 
-    double healthInsuranceDeduction = 0;
-    if(children < 0) {
-      children = 0;
-    }
-    if(children < healthInsuranceDependentLimit) {
-      healthInsuranceDeduction = healthInsuranceLessDependents;
-    } else {
-      healthInsuranceDeduction = healthInsuranceMoreDependents;
-    }
-
-
-    String lifeInsurancePrompt = "(1) no plan\n" +
-                                 "(2) single plan\n" +
-                                 "(3) married plan\n" +
-                                 "(4) married with children plan\n" +
-                                 "\n" +
-                                 "Selection: ";
+    String lifeInsurancePrompt          = "(1) no plan\n(2) single plan\n(3) married plan\n(4) married with children plan\n\nSelection: ";
     String lifeInsuranceError           = "Please enter a valid selection";
     String lifeInsuranceDependentsError = "This plan is only available to employees with dependents";
-    int lifeInsuranceSelection = 0;
-    double lifeInsuranceDeduction = 0;
-    boolean repeat = true;
-    while(repeat) {
-      lifeInsuranceSelection = Input.getInteger(1, 4, lifeInsurancePrompt, lifeInsuranceError);
-      if(lifeInsuranceSelection != 4 || children != 0) {
-        repeat = false;
-      } else {
-        System.out.println(lifeInsuranceDependentsError + '\n');
-      }
-    }
+    int lifeInsuranceSelection = getLifeInsuranceSelection(children, lifeInsurancePrompt, lifeInsuranceError, lifeInsuranceDependentsError);
     System.out.println();
+    double lifeInsuranceDeduction = getLifeInsurancePlanDeduction(lifeInsuranceSelection);
 
-    if(lifeInsuranceSelection == 1) {
-      lifeInsuranceDeduction = noLifeInsurancePlanDeduction;
-    } else if(lifeInsuranceSelection == 2) {
-      lifeInsuranceDeduction = singleLifeInsurancePlanDeduction;
-    } else if(lifeInsuranceSelection == 3) {
-      lifeInsuranceDeduction = marriedLifeInsurancePlanDeduction;
-    } else if(lifeInsuranceSelection == 4) {
-      lifeInsuranceDeduction = marriedKidsLifeInsurancePlanDeduction;
-    }
-
-    double grossPay;
-    if(hours <= overtimeLimit) {
-      grossPay = hours * rate;
-    } else {
-      grossPay = rate * (overtimeLimit + (hours - overtimeLimit) * overtimeMultiplier);
-    }
 
     double socialSecurityDeduction = grossPay * socialSecurityTax;
     double federalIncomeDeduction = grossPay * federalIncomeTax;
     double stateIncomeDeduction = grossPay * stateIncomeTax;
 
-    double netTax = 0;
-    netTax += socialSecurityDeduction;
-    netTax += federalIncomeDeduction;
-    netTax += stateIncomeDeduction;
-
-    double netFee = 0;
-    netFee += localUnionDeduction;
-    netFee += healthInsuranceDeduction;
-    netFee += lifeInsuranceDeduction;
+    double netTax = getNetTax(socialSecurityDeduction, federalIncomeDeduction, stateIncomeDeduction);
+    double netFee = getNetFee(localUnionDeduction, healthInsuranceDeduction, lifeInsuranceDeduction);
 
     boolean dues = true;
     double net = grossPay - netTax;
@@ -114,6 +118,7 @@ public class App {
       net -= netFee;
       dues = false;
     }
+
 
     System.out.println("Payroll Stub:");
     System.out.println();
